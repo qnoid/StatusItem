@@ -9,18 +9,15 @@
 import Cocoa
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, CALayerDelegate {
 
-    var statusItem: NSStatusItem! = {
+    lazy var statusItem: NSStatusItem! = { [weak self] in
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.isEnabled = true
         let layer = CALayer()
+        layer.delegate = self
         statusItem.button?.layer = layer
         statusItem.button?.wantsLayer = true
-        
-        let image = NSImage(named:NSImage.Name(rawValue: "statusItem"))
-        image?.isTemplate = true
-        statusItem.button?.layer?.contents = image
 
         return statusItem
     }()
@@ -35,13 +32,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         basicAnimation.repeatCount = Float.infinity
         
         statusItem.button?.layer?.add(basicAnimation, forKey: "spinAnimation")
-        statusItem.button?.layer?.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        statusItem.button?.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        statusItem.button?.layer?.setNeedsDisplay()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
     }
-
-
+    
+    func display(_ layer: CALayer) {
+        let frame = layer.frame
+        layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        layer.frame = frame
+        layer.contentsScale = 2.0
+        layer.contentsGravity = "aspectFit"
+        let image = #imageLiteral(resourceName: "statusItem")
+        image.isTemplate = true
+        layer.contents = image
+    }
 }
 
